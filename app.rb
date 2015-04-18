@@ -3,6 +3,8 @@ require "pry"
 
 require "tweetstream"
 require "twitter"
+
+require_relative "lib/uri_extractor"
 require_relative "lib/transcriber"
 
 Dotenv.load
@@ -22,32 +24,32 @@ TweetStream.configure do |config|
   config.auth_method = :oauth
 end
 
+
 TweetStream::Client.new.userstream do |status|
   if status.user.screen_name != "alt_text_bot"
-    tweet_url = status.urls.find do |url|
-      url.expanded_url.to_s.match(/^https:\/\/twitter\.com\/.*\/status\/.*$/)
-    end
+    uri_extractor = AltBot::UriExtractor.call(status, client)
+    image_uri = uri_extractor.image_uri
+    retweet = uri_extractor.retweet
 
-    if tweet_url
-      id = tweet_url.expanded_url.to_s.split("/").last.to_i
-      retweet = client.status(id)
+    if image_uri
+      EM.run do
+        transcriber = AltBot::Transcriber.new(image_uri)
+        transcriber.transcribe
 
-      if retweet.media?
-        images = retweet.media.select { |m| m.is_a? Twitter::Media::Photo }
-        uri = images.first.media_uri
+        transcriber.callback do |text|
+          message = "alt=#{text}. #{status.url} - @#{status.user.screen_name}"
 
-        EM.run do
-          transcriber = AltBot::Transcriber.new(uri.to_s)
-          transcriber.transcribe
-
-          transcriber.callback do |text|
-            message = "alt=#{text}. #{tweet_url.url} - @#{status.user.screen_name} @#{retweet.user.screen_name}"
-
-            client.update(message, in_reply_to_status_id: id)
+          if retweet
+            message += " @#{retweet.user.screen_name}"
+            id = retweet.id
+          else
+            id = status.id
           end
 
-          transcriber.errback { |error| puts error }
+          client.update(message, in_reply_to_status_id: id)
         end
+
+        transcriber.errback { |error| puts error }
       end
     end
   end
