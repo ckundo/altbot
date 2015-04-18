@@ -23,39 +23,31 @@ TweetStream.configure do |config|
 end
 
 TweetStream::Client.new.userstream do |status|
-  if status.media?
-    puts status
+  if status.user.screen_name != "alt_text_bot"
+    tweet_url = status.urls.find do |url|
+      url.expanded_url.to_s.match(/^https:\/\/twitter\.com\/.*\/status\/.*$/)
+    end
 
-    AltBot::Twitter.reply(status)
-  end
-end
+    if tweet_url
+      id = tweet_url.expanded_url.to_s.split("/").last.to_i
+      retweet = client.status(id)
 
-TweetStream::Client.new.track("alttext") do |status|
-  puts status
+      if retweet.media?
+        images = retweet.media.select { |m| m.is_a? Twitter::Media::Photo }
+        uri = images.first.media_uri
 
-  if status.media?
-    AltBot::Twitter.reply(status)
-  end
-end
+        EM.run do
+          transcriber = AltBot::Transcriber.new(uri.to_s)
+          transcriber.transcribe
 
-module AltBot
-  class Twitter
-    def self.reply(status)
-      images = status.media.select { |m| m.is_a? Twitter::Media::Photo }
-      uri = images.first.media_uri
-      transcriber = AltBot::Transcriber.new(uri.to_s)
+          transcriber.callback do |text|
+            message = "alt=#{text}. #{tweet_url.url} - @#{status.user.screen_name} @#{retweet.user.screen_name}"
 
-      EM.run do
-        transcriber.transcribe
+            client.update(message, in_reply_to_status_id: id)
+          end
 
-        transcriber.callback do |text|
-          message = ".@#{status.user.screen_name} it looks like a #{text}."
-          puts message
-
-          client.update(message, in_reply_to_status_id: status.id)
+          transcriber.errback { |error| puts error }
         end
-
-        transcriber.errback { |error| puts error }
       end
     end
   end
