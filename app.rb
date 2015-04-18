@@ -24,31 +24,39 @@ end
 
 TweetStream::Client.new.userstream do |status|
   if status.media?
-    reply(status)
+    puts status
+
+    AltBot::Twitter.reply(status)
   end
 end
 
 TweetStream::Client.new.track("alttext") do |status|
+  puts status
+
   if status.media?
-    reply(status)
+    AltBot::Twitter.reply(status)
   end
 end
 
-def reply(status)
-  images = status.media.select { |m| m.is_a? Twitter::Media::Photo }
-  uri = images.first.media_uri
-  transcriber = AltBot::Transcriber.new(uri.to_s)
+module AltBot
+  class Twitter
+    def self.reply(status)
+      images = status.media.select { |m| m.is_a? Twitter::Media::Photo }
+      uri = images.first.media_uri
+      transcriber = AltBot::Transcriber.new(uri.to_s)
 
-  EM.run do
-    transcriber.transcribe
+      EM.run do
+        transcriber.transcribe
 
-    transcriber.callback do |text|
-      message = ".@#{status.user.screen_name} it looks like a #{text}."
-      puts message
+        transcriber.callback do |text|
+          message = ".@#{status.user.screen_name} it looks like a #{text}."
+          puts message
 
-      client.update(message, in_reply_to_status_id: status.id)
+          client.update(message, in_reply_to_status_id: status.id)
+        end
+
+        transcriber.errback { |error| puts error }
+      end
     end
-
-    transcriber.errback { |error| puts error }
   end
 end
