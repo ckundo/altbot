@@ -37,7 +37,7 @@ TweetStream::Client.new.userstream do |status|
         transcriber.transcribe
 
         transcriber.callback do |text|
-          message = "alt=#{text}. #{status.url} - @#{status.user.screen_name}"
+          message = "alt=#{text.slice(0..50)}. #{status.url} - @#{status.user.screen_name}"
 
           if retweet
             message += " @#{retweet.user.screen_name}"
