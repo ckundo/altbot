@@ -9,8 +9,6 @@ require_relative "lib/transcriber"
 
 RESTRICTED = %w(
   alt_text_bot
-  homagehexagon
-  hexagonbot
 ).freeze
 
 Dotenv.load
@@ -43,13 +41,7 @@ TweetStream::Client.new.userstream do |status|
         transcriber.callback do |text|
           message = "alt=#{text.slice(0..50)}. #{status.url} - @#{status.user.screen_name}"
 
-          if retweet
-            id = retweet.id
-          else
-            id = status.id
-          end
-
-          client.update(message, in_reply_to_status_id: id)
+          client.update(message, in_reply_to_status_id: status.id)
         end
 
         transcriber.errback { |error| puts error }
