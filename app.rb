@@ -39,7 +39,7 @@ TweetStream::Client.new.userstream do |status|
         transcriber.transcribe
 
         transcriber.callback do |text|
-          message = "alt=#{text.slice(0..50)}. #{status.url} - @#{status.user.screen_name}"
+          message = "alt=#{text.slice(0..110)} - #{status.url}"
 
           client.update(message, in_reply_to_status_id: status.id)
         end
