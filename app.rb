@@ -7,6 +7,12 @@ require "twitter"
 require_relative "lib/uri_extractor"
 require_relative "lib/transcriber"
 
+RESTRICTED = %w(
+  alt_text_bot
+  homagehexagon
+  hexagonbot
+).freeze
+
 Dotenv.load
 
 client = Twitter::REST::Client.new do |config|
@@ -24,9 +30,8 @@ TweetStream.configure do |config|
   config.auth_method = :oauth
 end
 
-
 TweetStream::Client.new.userstream do |status|
-  if status.user.screen_name != "alt_text_bot"
+  unless RESTRICTED.include?(status.user.screen_name)
     uri_extractor = AltBot::UriExtractor.call(status, client)
     image_uri = uri_extractor.image_uri
     retweet = uri_extractor.retweet
