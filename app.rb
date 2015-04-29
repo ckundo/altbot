@@ -34,7 +34,6 @@ TweetStream::Client.new.userstream do |status|
   unless RESTRICTED.include?(status.user.screen_name)
     uri_extractor = AltBot::UriExtractor.call(status, client)
     image_uri = uri_extractor.image_uri
-    retweet = uri_extractor.retweet
 
     if image_uri
       EM.run do
@@ -45,7 +44,6 @@ TweetStream::Client.new.userstream do |status|
           message = "alt=#{text.slice(0..50)}. #{status.url} - @#{status.user.screen_name}"
 
           if retweet
-            message += " @#{retweet.user.screen_name}"
             id = retweet.id
           else
             id = status.id
