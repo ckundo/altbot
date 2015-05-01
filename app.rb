@@ -31,6 +31,7 @@ end
 TweetStream::Client.new.userstream do |status|
   unless RESTRICTED.include?(status.user.screen_name)
     puts status.text
+
     uri_extractor = AltBot::UriExtractor.call(status, client)
     image_uri = uri_extractor.image_uri
     tweet = uri_extractor.retweet || status
