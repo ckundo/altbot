@@ -9,7 +9,12 @@ module AltBot
     def initialize(status, client)
       @status = status
       @client = client
-      image_uri_from_tweet(tweet)
+
+      images = images_from_tweet(tweet)
+
+      if images.any?
+        @image_uri = images.first.media_uri.to_s
+      end
     end
 
     private
@@ -31,10 +36,8 @@ module AltBot
       end
     end
 
-    def image_uri_from_tweet(tweet)
-      @image_uri ||= tweet.media.find do |m|
-        m.is_a? Twitter::Media::Photo
-      end.try(:media_url).try(:to_s)
+    def images_from_tweet(tweet)
+      @images ||= tweet.media.select { |m| m.is_a? Twitter::Media::Photo } || []
     end
 
     def retweeted_status(id)
