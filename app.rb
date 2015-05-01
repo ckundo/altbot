@@ -34,7 +34,7 @@ TweetStream::Client.new.userstream do |status|
     uri_extractor = AltBot::UriExtractor.call(status, client)
     image_uri = uri_extractor.image_uri
     tweet = uri_extractor.retweet || status
-    message = "."
+    message = ""
 
     if image_uri
       EM.run do
@@ -43,12 +43,12 @@ TweetStream::Client.new.userstream do |status|
         puts "transcribing #{image_uri} from status #{tweet.id}"
 
         transcriber.callback do |text|
+          message += "alt=#{text.slice(0..100)}"
           if status.user.screen_name != tweet.user.screen_name
-            message += "@#{status.user.screen_name} "
+            message += " @#{status.user.screen_name} "
           end
 
-          message += "@#{tweet.user.screen_name}"
-          message += " alt=#{text.slice(0..100)}"
+          message += " @#{tweet.user.screen_name}"
           client.update(message, in_reply_to_status_id: tweet.id)
 
           puts message
