@@ -30,37 +30,39 @@ end
 TweetStream::Client.new.userstream do |status|
   puts status.text
 
-  if USERS.include?(status.user.screen_name)
-    uri_extractor = AltBot::UriExtractor.call(status, client)
-    image_uri = uri_extractor.image_uri
-    tweet = uri_extractor.retweet || status
-    message = ""
+  unless status.user.screen_name == "alt_text_bot"
+    if USERS.include?(status.user.screen_name)
+      uri_extractor = AltBot::UriExtractor.call(status, client)
+      image_uri = uri_extractor.image_uri
+      tweet = uri_extractor.retweet || status
+      message = ""
 
-    if image_uri
-      EM.run do
-        transcriber = AltBot::Transcriber.new(image_uri)
-        transcriber.transcribe
-        puts "transcribing #{image_uri} from status #{tweet.id}"
+      if image_uri
+        EM.run do
+          transcriber = AltBot::Transcriber.new(image_uri)
+          transcriber.transcribe
+          puts "transcribing #{image_uri} from status #{tweet.id}"
 
-        transcriber.callback do |text|
-          message += "alt=#{text.slice(0..100)}"
-          if status.user.screen_name != tweet.user.screen_name
-            message += " @#{status.user.screen_name} "
+          transcriber.callback do |text|
+            message += "alt=#{text.slice(0..100)}"
+            if status.user.screen_name != tweet.user.screen_name
+              message += " @#{status.user.screen_name} "
+            end
+
+            message += " @#{tweet.user.screen_name}"
+            client.update(message, in_reply_to_status_id: tweet.id)
+
+            puts message
           end
 
-          message += " @#{tweet.user.screen_name}"
-          client.update(message, in_reply_to_status_id: tweet.id)
-
-          puts message
+          transcriber.errback { |error| puts error }
         end
-
-        transcriber.errback { |error| puts error }
       end
+    else
+      client.update(
+        "@#{status.user.screen_name} Sign up for descriptions at http://alttextbot.com",
+        in_reply_to_status_id: status.id
+      )
     end
-  # elsif status.user.screen_name
-  #   client.update(
-  #     "@#{status.user.screen_name} Sign up for descriptions at http://alttextbot.com",
-  #     in_reply_to_status_id: status.id
-  #   )
   end
 end
