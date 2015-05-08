@@ -58,11 +58,6 @@ TweetStream::Client.new.userstream do |status|
           transcriber.errback { |error| puts error }
         end
       end
-    else
-      client.update(
-        "@#{status.user.screen_name} Sign up for descriptions at http://alttextbot.com",
-        in_reply_to_status_id: status.id
-      )
     end
   end
 end
