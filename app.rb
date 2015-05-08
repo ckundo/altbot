@@ -1,5 +1,6 @@
 require "dotenv"
 require "pry"
+require "yaml"
 
 require "tweetstream"
 require "twitter"
@@ -7,11 +8,9 @@ require "twitter"
 require_relative "lib/uri_extractor"
 require_relative "lib/transcriber"
 
-RESTRICTED = %w(
-  alt_text_bot
-).freeze
-
 Dotenv.load
+
+USERS = ENV.fetch("USERS").split(",").freeze
 
 client = Twitter::REST::Client.new do |config|
   config.consumer_key = ENV.fetch("TWITTER_CONSUMER_KEY")
@@ -29,8 +28,9 @@ TweetStream.configure do |config|
 end
 
 TweetStream::Client.new.userstream do |status|
-  unless RESTRICTED.include?(status.user.screen_name)
-    puts status.text
+  puts status.text
+
+  if USERS.include?(status.user.screen_name)
     uri_extractor = AltBot::UriExtractor.call(status, client)
     image_uri = uri_extractor.image_uri
     tweet = uri_extractor.retweet || status
@@ -57,5 +57,10 @@ TweetStream::Client.new.userstream do |status|
         transcriber.errback { |error| puts error }
       end
     end
+  # elsif status.user.screen_name
+  #   client.update(
+  #     "@#{status.user.screen_name} Sign up for descriptions at http://alttextbot.com",
+  #     in_reply_to_status_id: status.id
+  #   )
   end
 end
