@@ -9,7 +9,7 @@ $ git clone
 $ cd 
 $ bundle
 $ touch .env # Set up Environment Variables (see below)
-$ foreman
+$ foreman start
 ```
 
 ### Environment Variables
