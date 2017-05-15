@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     addressable (2.3.8)
+    ast (2.3.0)
     buftok (0.2.0)
     byebug (4.0.5)
       columnize (= 0.9.0)
@@ -49,6 +50,9 @@ GEM
     multipart-post (2.0.0)
     naught (1.0.0)
     netrc (0.10.3)
+    parser (2.4.0.0)
+      ast (~> 2.2)
+    powerpack (0.1.1)
     pry (0.10.1)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
@@ -56,6 +60,9 @@ GEM
     pry-byebug (3.1.0)
       byebug (~> 4.0)
       pry (~> 0.10)
+    rainbow (2.2.2)
+      rake
+    rake (12.0.0)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
@@ -73,6 +80,13 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.2.0)
     rspec-support (3.2.2)
+    rubocop (0.48.1)
+      parser (>= 2.3.3.1, < 3.0)
+      powerpack (~> 0.1)
+      rainbow (>= 1.99.1, < 3.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (~> 1.0, >= 1.0.1)
+    ruby-progressbar (1.8.1)
     safe_yaml (1.0.4)
     simple_oauth (0.3.1)
     slop (3.6.0)
@@ -98,6 +112,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.6)
+    unicode-display_width (1.2.1)
     vcr (2.9.3)
     webmock (1.21.0)
       addressable (>= 2.3.6)
@@ -114,6 +129,7 @@ DEPENDENCIES
   pry-byebug
   rest-client
   rspec
+  rubocop
   tweetstream
   vcr
   webmock

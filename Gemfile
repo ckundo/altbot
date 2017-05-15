@@ -12,6 +12,8 @@ gem "webmock"
 gem "vcr"
 gem "honeybadger"
 
+gem "rubocop", require: false
+
 group :development do
   gem "foreman"
 end
