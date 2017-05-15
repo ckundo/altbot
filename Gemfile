@@ -4,16 +4,15 @@ ruby "2.3.4"
 
 gem "dotenv"
 gem "em-http-request"
-gem "pry-byebug"
 gem "rest-client"
-gem "rspec"
 gem "tweetstream"
-gem "webmock"
-gem "vcr"
 gem "honeybadger"
 
-gem "rubocop", require: false
-
 group :development do
+  gem "rubocop", require: false
+  gem "rspec"
   gem "foreman"
+  gem "webmock"
+  gem "vcr"
+  gem "pry-byebug"
 end
