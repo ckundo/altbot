@@ -10,3 +10,7 @@ gem "rspec"
 gem "tweetstream"
 gem "webmock"
 gem "vcr"
+
+group :development do
+  gem "foreman"
+end
