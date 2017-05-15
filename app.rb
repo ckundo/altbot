@@ -8,7 +8,11 @@ require "twitter"
 require_relative "lib/uri_extractor"
 require_relative "lib/transcriber"
 
+require "honeybadger"
+
 Dotenv.load
+
+Honeybadger.start
 
 USERS = ENV.fetch("USERS").split(",").freeze
 
@@ -55,7 +59,9 @@ TweetStream::Client.new.userstream do |status|
             puts message
           end
 
-          transcriber.errback { |error| puts error }
+          transcriber.errback do |error|
+            Honeybadger.notify(error)
+          end
         end
       end
     end
