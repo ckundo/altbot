@@ -5,7 +5,7 @@ ruby "2.3.4"
 gem "dotenv"
 gem "em-http-request"
 gem "rest-client"
-gem "tweetstream"
+gem "twitter"
 gem "honeybadger"
 
 group :development do

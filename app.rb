@@ -2,7 +2,6 @@ require "dotenv"
 require "pry"
 require "yaml"
 
-require "tweetstream"
 require "twitter"
 
 require_relative "lib/uri_extractor"
@@ -23,47 +22,60 @@ client = Twitter::REST::Client.new do |config|
   config.access_token_secret = ENV.fetch("TWITTER_ACCESS_SECRET")
 end
 
-TweetStream.configure do |config|
+streamer = Twitter::Streaming::Client.new do |config|
   config.consumer_key = ENV.fetch("TWITTER_CONSUMER_KEY")
   config.consumer_secret = ENV.fetch("TWITTER_CONSUMER_SECRET")
-  config.oauth_token = ENV.fetch("TWITTER_ACCESS_TOKEN")
-  config.oauth_token_secret = ENV.fetch("TWITTER_ACCESS_SECRET")
-  config.auth_method = :oauth
+  config.access_token = ENV.fetch("TWITTER_ACCESS_TOKEN")
+  config.access_token_secret = ENV.fetch("TWITTER_ACCESS_SECRET")
 end
 
-TweetStream::Client.new.userstream do |status|
-  puts status.text
+def is_tweet_from_myself?(object)
+  object.user.screen_name == "alt_text_bot"
+end
 
-  unless status.user.screen_name == "alt_text_bot"
-    if USERS.include?(status.user.screen_name)
-      uri_extractor = AltBot::UriExtractor.call(status, client)
-      image_uri = uri_extractor.image_uri
-      tweet = uri_extractor.retweet || status
-      message = ""
+def is_subscribed_user?(object)
+  USERS.include?(object.user.screen_name)
+end
 
-      if image_uri
-        EM.run do
-          transcriber = AltBot::Transcriber.new(image_uri)
-          transcriber.transcribe
-          puts "transcribing #{image_uri} from status #{tweet.id}"
+streamer.user(replies: "all") do |object|
+  case object
+    when Twitter::Tweet
+      unless is_tweet_from_myself?(object)
+        if is_subscribed_user?(object)
+          uri_extractor = AltBot::UriExtractor.call(object, client)
+          image_uri = uri_extractor.image_uri
+          tweet = uri_extractor.retweet || object
+          message = ""
 
-          transcriber.callback do |text|
-            message += "alt=#{text.slice(0..100)}"
-            if status.user.screen_name != tweet.user.screen_name
-              message += " @#{status.user.screen_name} "
+          if image_uri
+            EM.run do
+              transcriber = AltBot::Transcriber.new(image_uri)
+              transcriber.transcribe
+              puts "transcribing #{image_uri} from status #{tweet.id}"
+
+              transcriber.callback do |text|
+                message += "alt=#{text.slice(0..100)}"
+                if object.user.screen_name != tweet.user.screen_name
+                  message += " @#{object.user.screen_name} "
+                end
+
+                message += " @#{tweet.user.screen_name}"
+                client.update(message, in_reply_to_status_id: tweet.id)
+
+                puts message
+              end
+
+              transcriber.errback do |error|
+                Honeybadger.notify(error)
+              end
             end
-
-            message += " @#{tweet.user.screen_name}"
-            client.update(message, in_reply_to_status_id: tweet.id)
-
-            puts message
-          end
-
-          transcriber.errback do |error|
-            Honeybadger.notify(error)
           end
         end
       end
-    end
+      
+    when Twitter::Streaming::StallWarning
+      Honeybadger.notify("Twitter::Streaming::StallWarning")
   end
 end
+
+Honeybadger.notify("altbot process ended")
