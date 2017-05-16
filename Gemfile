@@ -7,6 +7,7 @@ gem "em-http-request"
 gem "rest-client"
 gem "twitter"
 gem "honeybadger"
+gem "pry-byebug"
 
 group :development do
   gem "rubocop", require: false
@@ -14,5 +15,4 @@ group :development do
   gem "foreman"
   gem "webmock"
   gem "vcr"
-  gem "pry-byebug"
 end
