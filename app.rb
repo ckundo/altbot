@@ -37,7 +37,11 @@ def is_subscribed_user?(object)
   USERS.include?(object.user.screen_name)
 end
 
+puts "Starting streamer loop..."
+
 streamer.user(replies: "all") do |object|
+  puts "Stream event: #{object}"
+
   case object
     when Twitter::Tweet
       unless is_tweet_from_myself?(object)
@@ -69,6 +73,8 @@ streamer.user(replies: "all") do |object|
                 Honeybadger.notify(error)
               end
             end
+          else
+            puts "Request from non-subscriber `#{object.user.screen_name}`"
           end
         end
       end
