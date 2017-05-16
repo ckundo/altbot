@@ -73,9 +73,9 @@ streamer.user(replies: "all") do |object|
                 Honeybadger.notify(error)
               end
             end
-          else
-            puts "Request from non-subscriber `#{object.user.screen_name}`"
           end
+        else
+          puts "Request from non-subscriber `#{object.user.screen_name}`"
         end
       end
       
